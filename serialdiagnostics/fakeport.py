@@ -1,7 +1,7 @@
 from serial import FileLike
 from Queue import Queue, Empty
-from threading import Thread, enumerate
-from time import sleep, time
+from threading import Thread
+from time import sleep
 from random import randint
 from atexit import register
 
@@ -72,8 +72,7 @@ class FakePort(Thread, FileLike):
         return len(data)
 
     def flush(self):
-        ''' Flush input buffer, discarding all it’s contents.
-        '''
+        '''Flush input buffer, discarding it's contents'''
         while not self.q.empty():
             self.q.get(True)
 
