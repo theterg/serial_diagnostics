@@ -1,10 +1,11 @@
 from threading import Thread
 from time import sleep, time
 from atexit import register
+from util import get_datestr
 
 
 class Reader(Thread):
-    def __init__(self, port, terminator='\r\n'):
+    def __init__(self, port, terminator='\r\n', charlog=False):
         super(Reader, self).__init__()
         self.running = True
         self.daemon = True
@@ -14,6 +15,11 @@ class Reader(Thread):
         self.times = []
         self.charCB = None
         self.lineCB = None
+        if charlog:
+            self.charlog = open(get_datestr(port.name+'.csv'), 'w')
+            self.charlog.write("time,char\r\n")
+        else:
+            self.charlog = None
         self.starttime = time()
         register(self.__del__)
         self.start()
@@ -25,11 +31,12 @@ class Reader(Thread):
         line = []
         while(self.running):
             char = self.port.read(1)
-            if len(char) == 0:
+            if len(char) != 1:
                 continue
-            self.chars.append(char)
+            if self.charlog is not None:
+                self.charlog.write("%.6f,%02x\r\n" %(time() - self.starttime, ord(char)))
+                self.charlog.flush()
             line.append(char)
-            self.times.append(time() - self.starttime)
             if self.charCB is not None:
                 self.charCB(char)
             if self.lineCB is not None and \
@@ -40,12 +47,8 @@ class Reader(Thread):
     def close(self):
         self.running = False
         self.join()
-
-    def getChars(self):
-        return self.chars
-
-    def getTimes(self):
-        return self.times
+        if self.charlog is not None:
+            self.charlog.close()
 
     def setCharCB(self, func):
         if hasattr(func, '__call__') or func is None:
