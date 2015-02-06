@@ -14,7 +14,8 @@ class FakePort(Thread, FileLike):
     Implements pyserial.FileLike, so should be somewhat useable as a replacement
     for a normal pyserial serial port.
     '''
-    def __init__(self, port=0, baud=0, timeout=None, rate=10.0, linelength=40, terminator="\r\n"):
+    def __init__(self, port=0, baud=0, timeout=None, rate=10.0, linelength=40,
+            terminator="\r\n", charrange=('\x00', '\xff')):
         super(FakePort, self).__init__()
         self.timeout = timeout
         if self.timeout is None:
@@ -25,6 +26,7 @@ class FakePort(Thread, FileLike):
         self.q = Queue()
         self.running = True
         self.rate = rate
+        self.charrange = charrange
         self.linelength = linelength
         self.terminator = terminator
         register(self.__del__)
@@ -39,7 +41,7 @@ class FakePort(Thread, FileLike):
         # Thread is responsible for generating random characters
         while(self.running):
             sleep(1.0/self.rate)
-            self.q.put(chr(randint(0, 255)), False, 1.0)
+            self.q.put(chr(randint(ord(self.charrange[0]), ord(self.charrange[1]))), False, 1.0)
             if randint(1, self.linelength) == 1:
                 for char in self.terminator:
                     self.q.put(char)
