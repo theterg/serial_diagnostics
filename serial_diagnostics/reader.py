@@ -2,6 +2,7 @@ from threading import Thread
 from time import sleep, time
 from atexit import register
 from util import get_datestr
+import sys
 
 
 class Reader(Thread):
@@ -16,7 +17,7 @@ class Reader(Thread):
         self.charCB = None
         self.lineCB = None
         if charlog:
-            self.charlog = open(get_datestr(port.name+'.csv'), 'w')
+            self.charlog = open(get_datestr(port.name.split('/')[-1]+'.csv'), 'w')
             self.charlog.write("time,char\r\n")
         else:
             self.charlog = None
@@ -39,9 +40,8 @@ class Reader(Thread):
             line.append(char)
             if self.charCB is not None:
                 self.charCB(char)
-            if self.lineCB is not None and \
-                    line[(-1)*len(self.terminator):] == list(self.terminator):
-                self.lineCB(''.join(line[:(-1)*len(self.terminator)]))
+            if self.lineCB is not None and self.terminator in line:
+                self.lineCB(''.join(line))
                 line = []
 
     def close(self):

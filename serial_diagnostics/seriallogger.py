@@ -38,6 +38,7 @@ def port2_lineCB(line):
     lineq.put((time() - start_time, 2, line), False, 10.0)
 
 def format_line(timestamp, port, line, color=False):
+    line = line.strip()
     if color:
         if port == 1:
             return "[%9.3f]: %s" % (timestamp, Fore.GREEN + line + Fore.RESET)
